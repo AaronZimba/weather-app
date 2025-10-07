@@ -9,7 +9,7 @@ import {
   Tooltip,
   Legend,
   Title,
-  Filler // Added for fill functionality
+  Filler
 } from 'chart.js';
 
 // Register ChartJS components
@@ -21,7 +21,7 @@ ChartJS.register(
   Tooltip,
   Legend,
   Title,
-  Filler // Register Filler for the fill effect
+  Filler
 );
 
 function formatHour(dt) {
@@ -49,6 +49,8 @@ export default function WeatherChart({ hourly = [], current, units = 'metric' })
     }]
   };
 
+  const isMobile = window.innerWidth < 640;
+
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -59,9 +61,9 @@ export default function WeatherChart({ hourly = [], current, units = 'metric' })
       title: {
         display: true,
         text: 'Next 12 Hours',
-        color: '#e5e7eb', // gray-200 for better contrast
+        color: '#e5e7eb',
         font: {
-          size: 14,
+          size: isMobile ? 12 : 14,
           weight: 'normal'
         }
       },
@@ -70,35 +72,94 @@ export default function WeatherChart({ hourly = [], current, units = 'metric' })
         titleColor: '#f3f4f6',
         bodyColor: '#f3f4f6',
         borderColor: 'rgba(99, 102, 241, 0.5)',
-        borderWidth: 1
+        borderWidth: 1,
+        titleFont: {
+          size: isMobile ? 11 : 12
+        },
+        bodyFont: {
+          size: isMobile ? 11 : 12
+        },
+        padding: isMobile ? 6 : 8
       }
     },
     scales: {
       x: {
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
+          color: 'rgba(255, 255, 255, 0.1)',
+          drawTicks: false
         },
         ticks: {
-          color: '#9ca3af' // gray-400
+          color: '#9ca3af',
+          font: {
+            size: isMobile ? 10 : 11
+          },
+          maxRotation: 0,
+          callback: function(value, index) {
+            // On mobile, show fewer labels for better readability
+            if (isMobile) {
+              return index % 3 === 0 ? this.getLabelForValue(value) : '';
+            }
+            return this.getLabelForValue(value);
+          }
+        },
+        border: {
+          display: false
         }
       },
       y: {
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
+          color: 'rgba(255, 255, 255, 0.1)',
+          drawTicks: false
         },
         ticks: {
-          color: '#9ca3af' // gray-400
+          color: '#9ca3af',
+          font: {
+            size: isMobile ? 10 : 11
+          },
+          padding: 8,
+          callback: function(value) {
+            return value + '°';
+          }
+        },
+        border: {
+          display: false
         }
+      }
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
+    elements: {
+      point: {
+        radius: isMobile ? 2.5 : 3,
+        hoverRadius: isMobile ? 4 : 5
+      },
+      line: {
+        borderWidth: 2,
+        tension: 0.3
+      }
+    },
+    layout: {
+      padding: {
+        top: isMobile ? 5 : 10,
+        bottom: isMobile ? 5 : 10
       }
     }
   };
 
   return (
-    <div style={{ height: 160 }}>
+    <div style={{ 
+      height: isMobile ? 150 : 160,
+      position: 'relative'
+    }}>
       {next12Hours.length ? (
-        <Line data={data} options={options} />
+        <Line 
+          data={data} 
+          options={options}
+        />
       ) : (
-        <div className="flex items-center justify-center h-full opacity-40 text-gray-400">
+        <div className="flex items-center justify-center h-full opacity-40 text-gray-400 text-sm">
           No chart data available
         </div>
       )}
